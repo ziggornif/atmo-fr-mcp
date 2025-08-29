@@ -16,7 +16,7 @@ pub async fn get_atmo_bearer(username: &str, password: &str) -> Result<String, a
     Ok(res.token)
 }
 
-pub async fn get_qualite_air(
+async fn call_atmo(
     date: &str,
     code: &str,
     token: &str,
@@ -26,16 +26,39 @@ pub async fn get_qualite_air(
         "https://admindata.atmo-france.org/api/v2/data/indices/atmo?format=geojson&date={}&code_zone={}",
         date, code
     );
+
     let resp = client
         .get(url)
         .bearer_auth(token)
         .send()
         .await?
         .json::<QualiteAirReponse>()
-        .await?;
-    if resp.features.is_empty() {
-        Err(anyhow::anyhow!("Empty response with code {}", code))
-    } else {
-        Ok(resp)
+        .await
+        .map_err(|e| {
+            anyhow::anyhow!(
+                "❌ Impossible de récupérer les 
+  données de qualité de l'air. Erreur : {}",
+                e
+            )
+        })?;
+
+    Ok(resp)
+}
+
+pub async fn get_qualite_air(
+    date: &str,
+    code_insee: &str,
+    code_epci: &str,
+    token: &str,
+) -> Result<QualiteAirReponse, anyhow::Error> {
+    let insee_resp = call_atmo(date, code_insee, token).await?;
+    if !insee_resp.features.is_empty() {
+        return Ok(insee_resp);
     }
+
+    // fallback on bascule sur la recherche par code EPCI
+    eprintln!("Erreur avec code_insee: {code_insee}. Tentative avec code_epci...");
+
+    let epci_resp = call_atmo(date, code_epci, token).await?;
+    Ok(epci_resp)
 }

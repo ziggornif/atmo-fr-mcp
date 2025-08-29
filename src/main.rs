@@ -1,4 +1,4 @@
-use atmo_fr_mcp::{config::config::Config, tools::air_quality::AirQuality};
+use atmo_fr_mcp::{config::Config, tools::air_quality::AirQuality};
 use rmcp::transport::streamable_http_server::{
     StreamableHttpService, session::local::LocalSessionManager,
 };

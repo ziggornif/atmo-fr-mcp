@@ -11,7 +11,7 @@ use crate::{
         atmo_api::{get_atmo_bearer, get_qualite_air},
         geo_api::get_city_codes,
     },
-    config::config::Config,
+    config::Config,
 };
 
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
@@ -42,37 +42,75 @@ impl AirQuality {
         &self,
         Parameters(AirQualityRequest { ville, code_postal }): Parameters<AirQualityRequest>,
     ) -> String {
-        let city_codes = get_city_codes(&ville, &code_postal).await.unwrap();
-        let token = get_atmo_bearer(&self.config.atmo_username, &self.config.atmo_password)
-            .await
-            .unwrap_or_default();
-        let date = Local::now().format("%Y-%m-%d").to_string();
-        let resp = match get_qualite_air(&date, &city_codes.code_insee, &token).await {
-            Ok(r) => r,
+        if let Err(err) = self.validate_input(&ville, &code_postal) {
+            return err;
+        }
+
+        match self.fetch_air_quality_data(&ville, &code_postal).await {
+            Ok(response) => self.format_air_quality_response(&ville, &code_postal, &response),
+            Err(err) => err,
+        }
+    }
+
+    fn validate_input(&self, ville: &str, code_postal: &str) -> Result<(), String> {
+        if ville.trim().is_empty() {
+            return Err("❌ Le nom de la ville ne peut pas être vide".to_string());
+        }
+
+        if code_postal.len() != 5 || !code_postal.chars().all(|c| c.is_ascii_digit()) {
+            return Err("❌ Le code postal doit contenir exactement 5 chiffres".to_string());
+        }
+
+        Ok(())
+    }
+
+    async fn fetch_air_quality_data(
+        &self,
+        ville: &str,
+        code_postal: &str,
+    ) -> Result<crate::model::atmo::QualiteAirReponse, String> {
+        let city_codes = match get_city_codes(ville, code_postal).await {
+            Ok(codes) => codes,
             Err(e) => {
-                eprintln!("Erreur avec code_insee: {e}. Tentative avec code_epci...");
-                match get_qualite_air(&date, &city_codes.code_epci, &token).await {
-                    Ok(r) => r,
-                    Err(e2) => {
-                        return format!(
-                            "Impossible de récupérer les données de qualité de l'air pour {} ({}).\n\
-                            Erreur avec code INSEE: {}\n\
-                            Erreur avec code EPCI: {}",
-                            ville, code_postal, e, e2
-                        );
-                    }
-                }
+                return Err(format!(
+                    "❌ Impossible de récupérer les codes de la ville {} ({}): {}",
+                    ville, code_postal, e
+                ));
             }
         };
 
-        if resp.features.is_empty() {
+        let token =
+            match get_atmo_bearer(&self.config.atmo_username, &self.config.atmo_password).await {
+                Ok(token) => token,
+                Err(e) => {
+                    return Err(format!(
+                        "❌ Erreur d'authentification avec l'API Atmo: {}",
+                        e
+                    ));
+                }
+            };
+
+        let date = Local::now().format("%Y-%m-%d").to_string();
+
+        get_qualite_air(&date, &city_codes.code_insee, &city_codes.code_epci, &token)
+            .await
+            .map_err(|e| format!("{}", e))
+    }
+
+    fn format_air_quality_response(
+        &self,
+        ville: &str,
+        code_postal: &str,
+        response: &crate::model::atmo::QualiteAirReponse,
+    ) -> String {
+        if response.features.is_empty() {
             return format!(
-                "Aucune donnée de qualité de l'air trouvée pour {} ({})",
+                "❌ Aucune donnée de qualité de l'air trouvée pour {} ({})",
                 ville, code_postal
             );
         }
 
-        let feature = &resp.features[0];
+        let feature = &response.features[0];
         let props = &feature.properties;
 
         format!(
