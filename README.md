@@ -15,7 +15,9 @@ Ce projet combine les données géographiques de l'API gouvernementale français
 
 ## Configuration
 
-Créez un fichier `.env` avec vos identifiants Atmo France :
+- Créer un compte sur le site Atmo France : https://admindata.atmo-france.org/inscription-api
+- Initialiser le mot de passe via le mail reçu
+- Créez un fichier `.env` avec vos identifiants Atmo France créés :
 
 ```env
 ATMO_USERNAME=votre_nom_utilisateur
