@@ -1,43 +1,24 @@
-use atmo_fr_mcp::{
-    adapters::{
-        atmo_api::{get_atmo_bearer, get_qualite_air},
-        geo_api::get_city_codes,
-    },
-    model::geo::CityInfos,
+use atmo_fr_mcp::{config::config::Config, tools::air_quality::AirQuality};
+use rmcp::transport::streamable_http_server::{
+    StreamableHttpService, session::local::LocalSessionManager,
 };
-use serde::Deserialize;
 
-#[derive(Deserialize, Debug)]
-struct Config {
-    atmo_username: String,
-    atmo_password: String,
-}
+const BIND_ADDRESS: &str = "127.0.0.1:8000";
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenvy::dotenv().ok();
     let config = envy::from_env::<Config>().unwrap();
-    let date = "2025-08-28";
-    let city = CityInfos {
-        name: "Vannes".to_owned(),
-        code_postal: "56000".to_owned(),
-    };
-    let city_codes = get_city_codes(&city.name, &city.code_postal).await?;
-    let token = get_atmo_bearer(config.atmo_username, config.atmo_password).await?;
-
-    let resp = match get_qualite_air(date, &city_codes.code_insee, &token).await {
-        Ok(r) => r,
-        Err(e) => {
-            eprintln!("Erreur avec code_insee: {e}. Tentative avec code_epci...");
-            get_qualite_air(date, &city_codes.code_epci, &token).await?
-        }
-    };
-
-    println!(
-        "Qualité de l'air à {} : {} {}",
-        resp.features[0].properties.lib_zone,
-        resp.features[0].properties.code_qual,
-        resp.features[0].properties.lib_qual
+    let service = StreamableHttpService::new(
+        move || Ok(AirQuality::new(config.clone())),
+        LocalSessionManager::default().into(),
+        Default::default(),
     );
+
+    let router = axum::Router::new().nest_service("/mcp", service);
+    let tcp_listener = tokio::net::TcpListener::bind(BIND_ADDRESS).await?;
+    let _ = axum::serve(tcp_listener, router)
+        .with_graceful_shutdown(async { tokio::signal::ctrl_c().await.unwrap() })
+        .await;
     Ok(())
 }

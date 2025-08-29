@@ -1,10 +1,13 @@
 use crate::model::atmo::{LoginForm, LoginResponse, QualiteAirReponse};
 
-pub async fn get_atmo_bearer(username: String, password: String) -> Result<String, anyhow::Error> {
+pub async fn get_atmo_bearer(username: &str, password: &str) -> Result<String, anyhow::Error> {
     let client = reqwest::Client::new();
     let res = client
         .post("https://admindata.atmo-france.org/api/login")
-        .json(&LoginForm { username, password })
+        .json(&LoginForm {
+            username: username.to_string(),
+            password: password.to_string(),
+        })
         .send()
         .await?
         .json::<LoginResponse>()

@@ -36,10 +36,48 @@ cargo build
 cargo run
 ```
 
-## TODO
+Le serveur sera disponible sur `http://127.0.0.1:8000/mcp`.
 
-- [x] Init projet
-- [x] Interfaçage API ATMO
-- [x] Interfaçage API geo.api.gouv.fr
-- [ ] Serveur MCP
-- [ ] Documentation
+## Serveur MCP
+
+Ce projet implémente un serveur MCP (Model Context Protocol) qui expose un outil pour récupérer les données de qualité de l'air.
+
+### Configuration MCP VSCode
+
+Pour utiliser ce serveur MCP avec VSCode, ajoutez la configuration suivante dans vos paramètres MCP :
+
+
+```json
+{
+	"servers": {
+		"atmo-fr-mcp": {
+			"url": "http://localhost:8000/mcp",
+			"type": "http"
+		}
+	}
+}
+```
+
+### Outils disponibles
+
+- **get_air_quality** : Récupère la qualité de l'air pour une ville donnée
+  - Paramètres :
+    - `ville` : Nom de la ville
+    - `code_postal` : Code postal de la ville
+  - Retourne : Informations détaillées sur la qualité de l'air incluant l'indice global et les polluants spécifiques
+
+### Exemple
+
+> Peux tu me donner la qualité de l'air à Vannes ?
+
+> La qualité de l'air à Vannes (56000) aujourd'hui est "Moyen" (indice 2, code couleur #50CCAA).
+> 
+> Détail des polluants :
+> 
+> - NO₂ (dioxyde d'azote) : 1
+> - O₃ (ozone) : 2
+> - PM10 (particules fines) : 1
+> - PM2.5 (particules très fines) : 1
+> - SO₂ (dioxyde de soufre) : 1
+>
+> Source : Air Breizh, zone CA Golfe du Morbihan - Vannes Agglomération.
