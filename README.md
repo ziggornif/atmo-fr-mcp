@@ -70,7 +70,7 @@ Pour utiliser ce serveur MCP avec VSCode, ajoutez la configuration suivante dans
 
 > Peux tu me donner la qualité de l'air à Vannes ?
 
-> La qualité de l'air à Vannes (56000) aujourd'hui est "Moyen" (indice 2, code couleur #50CCAA).
+> La qualité de l'air à Vannes (56000) aujourd'hui est "Moyen" (indice 2).
 > 
 > Détail des polluants :
 > 

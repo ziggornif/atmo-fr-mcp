@@ -73,7 +73,6 @@ impl AirQuality {
             🔍 Zone: {} ({})\n\
             \n\
             📊 Indice de qualité global: {} - {}\n\
-            🎨 Code couleur: {}\n\
             \n\
             💨 Détail des polluants:\n\
             • NO₂ (dioxyde d'azote): {}\n\
@@ -92,7 +91,6 @@ impl AirQuality {
             props.code_zone,
             props.code_qual,
             props.lib_qual,
-            props.coul_qual,
             props.code_no2,
             props.code_o3,
             props.code_pm10,
