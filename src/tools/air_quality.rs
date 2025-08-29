@@ -45,15 +45,23 @@ impl AirQuality {
         let city_codes = get_city_codes(&ville, &code_postal).await.unwrap();
         let token = get_atmo_bearer(&self.config.atmo_username, &self.config.atmo_password)
             .await
-            .unwrap();
+            .unwrap_or_default();
         let date = Local::now().format("%Y-%m-%d").to_string();
         let resp = match get_qualite_air(&date, &city_codes.code_insee, &token).await {
             Ok(r) => r,
             Err(e) => {
                 eprintln!("Erreur avec code_insee: {e}. Tentative avec code_epci...");
-                get_qualite_air(&date, &city_codes.code_epci, &token)
-                    .await
-                    .unwrap()
+                match get_qualite_air(&date, &city_codes.code_epci, &token).await {
+                    Ok(r) => r,
+                    Err(e2) => {
+                        return format!(
+                            "Impossible de récupérer les données de qualité de l'air pour {} ({}).\n\
+                            Erreur avec code INSEE: {}\n\
+                            Erreur avec code EPCI: {}",
+                            ville, code_postal, e, e2
+                        );
+                    }
+                }
             }
         };
 
@@ -73,6 +81,7 @@ impl AirQuality {
             🔍 Zone: {} ({})\n\
             \n\
             📊 Indice de qualité global: {} - {}\n\
+            (0: Absent, 1: Bon, 2: Moyen, 3: Dégradé, 4: Mauvais, 5: Très mauvais, 6: Extrêmement mauvais, 7: Evénement)\n\
             \n\
             💨 Détail des polluants:\n\
             • NO₂ (dioxyde d'azote): {}\n\
