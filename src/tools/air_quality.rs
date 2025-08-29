@@ -72,10 +72,7 @@ impl AirQuality {
         let city_codes = match get_city_codes(ville, code_postal).await {
             Ok(codes) => codes,
             Err(e) => {
-                return Err(format!(
-                    "❌ Impossible de récupérer les codes de la ville {} ({}): {}",
-                    ville, code_postal, e
-                ));
+                return Err(format!("{}", e));
             }
         };
 

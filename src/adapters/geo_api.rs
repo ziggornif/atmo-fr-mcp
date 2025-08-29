@@ -9,7 +9,7 @@ pub async fn get_city_codes(name: &str, code_postal: &str) -> Result<CityCodes, 
     match resp.iter().find(|&city| city.nom == name) {
         Some(city) => Ok(city.clone()),
         None => Err(anyhow::anyhow!(
-            "No codes for city {} {}",
+            "❌ Impossible de récupérer les codes de la ville {} ({})",
             name,
             code_postal
         )),
