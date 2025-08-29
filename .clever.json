@@ -1,0 +1,12 @@
+{
+  "apps": [
+    {
+      "app_id": "app_6bb1ed4b-b21f-41b2-90db-321b01a55b4a",
+      "org_id": "user_d52e37c3-c5c5-4907-b3e9-a4b6c5a14095",
+      "deploy_url": "https://github.com/ziggornif/atmo-fr-mcp.git",
+      "git_ssh_url": "https://github.com/ziggornif/atmo-fr-mcp.git",
+      "name": "atmo-fr-mcp",
+      "alias": "atmo-fr-mcp"
+    }
+  ]
+}
