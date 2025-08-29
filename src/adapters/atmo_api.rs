@@ -36,8 +36,7 @@ async fn call_atmo(
         .await
         .map_err(|e| {
             anyhow::anyhow!(
-                "❌ Impossible de récupérer les 
-  données de qualité de l'air. Erreur : {}",
+                "❌ Impossible de récupérer les données de qualité de l'air. Erreur : {}",
                 e
             )
         })?;
